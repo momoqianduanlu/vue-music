@@ -46,6 +46,7 @@ export default {
     }
   },
   mounted () {
+    // 保证dom成功渲染可以用定时器也可以用this.$nextick()
     setTimeout(() => {
       this._setSliderWidth()
       this._initDots()
@@ -64,6 +65,7 @@ export default {
 
       clearTimeout(this.resizeTimer)
       this.resizeTimer = setTimeout(() => {
+        // isInTransition 判断当前 scroll 是否处于滚动动画过程中
         if (this.slider.isInTransition) {
           this._onScrollEnd()
         } else {
@@ -78,7 +80,7 @@ export default {
   methods: {
     // 设置轮播图的宽度
     _setSliderWidth (isResize) {
-      // 获取sliderGroup中的子元素(每一个包含图片的div)
+      // 获取sliderGroup中的子元素，他是一个数组(每一个包含图片的div)
       this.children = this.$refs.sliderGroup.children
 
       let width = 0
@@ -103,6 +105,7 @@ export default {
       }
       this.$refs.sliderGroup.style.width = width + 'px'
     },
+    // 为了保证dots能跟children一致，我们必须将_initDots放在_initSlider之前
     _initDots () {
       this.dots = new Array(this.children.length)
     },
@@ -124,6 +127,12 @@ export default {
       this.slider.on('touchEnd', () => {
         if (this.autoPlay) {
           this._play()
+        }
+      })
+      // 滚动开始之前
+      this.slider.on('beforeScrollStart', () => {
+        if (this.autoPlay) {
+          clearTimeout(this.timer)
         }
       })
     },
