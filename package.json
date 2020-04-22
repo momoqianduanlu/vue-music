@@ -13,6 +13,7 @@
     "better-scroll": "^1.15.1",
     "core-js": "^2.6.5",
     "fastclick": "^1.0.6",
+    "vue-lazyload": "1.0.3",
     "jsonp": "^0.2.1",
     "vue": "^2.6.10",
     "vue-router": "^3.0.3",

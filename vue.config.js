@@ -1,5 +1,5 @@
-const axios = require('axios')
 const path = require('path')
+const axios = require('axios')
 
 function resolve (dir) {
   return path.join(__dirname, dir)
