@@ -36,6 +36,13 @@
         </li>
       </ul>
     </div>
+    <!-- fixed-title -->
+    <div class="list-fixed" ref="fixed" v-show="fixedTitle">
+      <div class="fixed-title">{{fixedTitle}}</div>
+    </div>
+    <div v-show="!data.length" class="loading-container">
+      <loading></loading>
+    </div>
   </scroll>
 </template>
 
@@ -59,7 +66,8 @@ export default {
   data () {
     return {
       scrollY: -1,
-      currentIndex: 0
+      currentIndex: 0,
+      diff: -1
     }
   },
   computed: {
@@ -68,6 +76,13 @@ export default {
       return this.data.map((group) => {
         return group.title.substr(0, 1) // 只获取title的第一个字符
       })
+    },
+    fixedTitle () {
+      // 边界情况，当我们向下拉歌手列表时，fixed-title会与第一个标题'热'重复出现
+      if (this.scrollY > 0) {
+        return ''
+      }
+      return this.data[this.currentIndex] ? this.data[this.currentIndex].title : ''
     }
   },
   watch: {
@@ -86,14 +101,32 @@ export default {
       }
       // 在中间部分滚动
       for (let i = 0; i < listHeight.length - 1; i++) {
-        // 上限是最高的，下限是最低的，第一个元素的结尾对应第二个元素的开头
-        let height1 = listHeight[i] // 上限
-        let height2 = listHeight[i + 1] // 下限
-        if (!height2 || (-newY>height1 && -newY<height2)) { // !height2滚动到最底部
+        // 上限是最高的，下限是最低的
+        let height1 = listHeight[i] // 下限
+        let height2 = listHeight[i + 1] // 上限
+        // console.log(height1, height2);
+        if (-newY >= height1 && -newY < height2) { // !height2滚动到最底部
           this.currentIndex = i // 当前点亮的字母就在(-newY>height1 && -newY<height2)这个区间
+          this.diff = height2 + newY
           return
         }
       }
+      // 当滚动到最底部且-newY大于最后一个元素的上限
+      this.currentIndex = listHeight.length - 2
+    },
+    diff (newVal) {
+      // 因为是向上偏移，所以应该是一个负值，所以我们用newVal - TITLE_HEIGHT
+      let fixedTop = (newVal > 0 && newVal < TITLE_HEIGHT) ? newVal - TITLE_HEIGHT : 0
+      /**
+       * 这句话什么意思？
+       * 因为diff是一个实时变化的过程，当B与A顶到一块的时候，我们没有必要做偏移
+       * 同时也是为了减少transform的频度，减少dom操作
+       */
+      if (this.fixedTop === fixedTop) {
+        return
+      }
+      this.fixedTop = fixedTop
+      this.$refs.fixed.style.transform = `translate3d(0, ${fixedTop}px, 0)`
     }
   },
   created () {
@@ -152,8 +185,19 @@ export default {
         height += item.clientHeight
         this.listHeight.push(height)
       }
+      console.log(this.listHeight);
     },
     _scrollTo (index) {
+      // 这个判断是为了防止我们touchstart时点击“热”的上半部分和点击“z”的下半部分时，index返回null
+      if (!index && index !== 0) {
+        return
+      }
+      // touchmove时滑动到“热”的上半部分index是小于0的，滑动到“z”的下半部分时index是无穷大的
+      if (index < 0) {
+        index = 0
+      } else if (index > this.listHeight.length - 2) {
+        index = this.listHeight.length - 2
+      }
       // 左侧滚动到指定元素
       this.$refs.listview.scrollToElement(this.$refs.listGroup[index], 0)
     }
