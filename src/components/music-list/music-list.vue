@@ -74,10 +74,18 @@ export default {
       // 最远滚动距离
       let translateY = Math.max(this.minTransalteY, newY)
       let zIndex = 0
-      this.$refs.layer.style.transform = `translate3d(0, ${translateY}px, 0)`
+      let scale = 1
+      this.$refs.layer.style['transform'] = `translate3d(0, ${translateY}px, 0)`
       // 加一下浏览器前缀
       this.$refs.layer.style['webkitTransform'] = `translate3d(0, ${translateY}px, 0)`
-      if (newY < this.minTransalteY) { //已经滚到顶部
+      // 缩放公式
+      const percent = Math.abs(newY / this.imageHeight)
+      if (newY > 0) {
+        // (1 + percent) * this.imageHeight === newY + this.imageHeight
+        scale = 1 + percent
+        zIndex = 10
+      }
+      if (newY < this.minTransalteY) { // 已经滚到顶部
         zIndex = 10
         this.$refs.bgImage.style.paddingTop = 0
         this.$refs.bgImage.style.height = `${RESERVED_HEIGHT}px`
@@ -86,6 +94,8 @@ export default {
         this.$refs.bgImage.style.height = 0
       }
       this.$refs.bgImage.style.zIndex = zIndex
+      this.$refs.bgImage.style['transform'] = `scale(${scale})`
+      this.$refs.bgImage.style['webkitTransform'] = `scale(${scale})`
     }
   },
   methods: {
