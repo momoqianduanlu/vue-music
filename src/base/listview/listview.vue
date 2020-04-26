@@ -11,7 +11,7 @@
       <li v-for="(group,index) in data" :key="index" class="list-group" ref="listGroup">
         <h2 class="list-group-title">{{group.title}}</h2>
         <uL>
-          <li v-for="(item,index) in group.items" :key="index" class="list-group-item">
+          <li @click="selectItem(item)" v-for="(item,index) in group.items" :key="index" class="list-group-item">
             <img class="avatar" v-lazy="item.avatar">
             <span class="name">{{item.name}}</span>
           </li>
@@ -143,6 +143,9 @@ export default {
     this.listHeight = []
   },
   methods: {
+    selectItem (item) {
+      this.$emit('select', item)
+    },
     onShortcutTouchstart (e) {
       // 字母的index
       let anchorIndex = getData(e.target, 'index')
@@ -185,7 +188,7 @@ export default {
         height += item.clientHeight
         this.listHeight.push(height)
       }
-      console.log(this.listHeight);
+      // console.log(this.listHeight);
     },
     _scrollTo (index) {
       // 这个判断是为了防止我们touchstart时点击“热”的上半部分和点击“z”的下半部分时，index返回null

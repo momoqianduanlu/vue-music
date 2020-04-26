@@ -3,8 +3,13 @@ import Router from 'vue-router'
 
 Vue.use(Router)
 
+const Recommend = () => import('components/recommend/recommend')
+const Singer = () => import('components/singer/singer')
+const Rank = () => import('components/rank/rank')
+const Search = () => import('components/search/search')
+const SingerDetail = () => import('components/singer-detail/singer-detail')
+
 export default new Router({
-  mode: 'history',
   base: process.env.BASE_URL,
   routes: [
     {
@@ -13,26 +18,25 @@ export default new Router({
     },
     {
       path: '/recommend',
-      name: 'recommend',
-      component: () => import(/* webpackChunkName: "recommend" */ 'components/recommend/recommend')
+      component: Recommend
     },
     {
       path: '/singer',
-      name: 'singer',
-      // route level code-splitting
-      // this generates a separate chunk (about.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import(/* webpackChunkName: "singer" */ 'components/singer/singer')
+      component: Singer,
+      children: [
+        {
+          path: ':id',
+          component: SingerDetail
+        }
+      ]
     },
     {
       path: '/rank',
-      name: 'rank',
-      component: () => import(/* webpackChunkName: "rank" */ 'components/rank/rank')
+      component: Rank
     },
     {
       path: '/search',
-      name: 'search',
-      component: () => import(/* webpackChunkName: "search" */ 'components/search/search')
+      component: Search
     }
   ]
 })
