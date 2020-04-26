@@ -26,8 +26,11 @@
 <script>
 import Scroll from 'base/scroll/scroll'
 import SongList from 'base/song-list/song-list'
+import { prefixStyle } from 'common/js/dom'
 
 const RESERVED_HEIGHT = 40
+// 我们将transform传入prefixStyle方法，我们在这个方法里面就能知道vendor供应商是谁
+const transform = prefixStyle('transform')
 
 export default {
   name: 'music-list',
@@ -75,9 +78,7 @@ export default {
       let translateY = Math.max(this.minTransalteY, newY)
       let zIndex = 0
       let scale = 1
-      this.$refs.layer.style['transform'] = `translate3d(0, ${translateY}px, 0)`
-      // 加一下浏览器前缀
-      this.$refs.layer.style['webkitTransform'] = `translate3d(0, ${translateY}px, 0)`
+      this.$refs.layer.style[transform] = `translate3d(0, ${translateY}px, 0)`
       // 缩放公式
       const percent = Math.abs(newY / this.imageHeight)
       if (newY > 0) {
@@ -94,8 +95,7 @@ export default {
         this.$refs.bgImage.style.height = 0
       }
       this.$refs.bgImage.style.zIndex = zIndex
-      this.$refs.bgImage.style['transform'] = `scale(${scale})`
-      this.$refs.bgImage.style['webkitTransform'] = `scale(${scale})`
+      this.$refs.bgImage.style[transform] = `scale(${scale})`
     }
   },
   methods: {
