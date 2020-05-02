@@ -1,6 +1,11 @@
 <template>
   <div class="player" v-show="playlist.length>0">
-    <transition name="normal">
+    <transition name="normal"
+      @enter="enter"
+      @after-enter="afterEnter"
+      @leave="leave"
+      @after-leave="afterLeave"
+    >
       <div class="normal-player" v-show="fullScreen">
         <div class="background">
           <img width="100%" height="100%" :src="currentSong.image">
@@ -14,7 +19,7 @@
         </div>
         <div class="middle">
           <div class="middle-l">
-            <div class="cd-wrapper">
+            <div class="cd-wrapper" ref="cdWrapper">
               <div class="cd">
                 <img class="image" :src="currentSong.image">
               </div>
@@ -64,6 +69,10 @@
 
 <script>
 import { mapGetters, mapMutations } from 'vuex'
+import animations from 'create-keyframe-animation'
+import { prefixStyle } from 'common/js/dom'
+
+const transform = prefixStyle('transform')
 
 export default {
   computed: {
@@ -79,6 +88,65 @@ export default {
     },
     open () {
       this.setFullScreen(true)
+    },
+    enter (el, done) {
+      // done执行代表会跳到下一个钩子
+      const { x, y, scale } = this._getPosAndScale()
+      let animation = {
+        0: {
+          transform: `translate3d(${x}px,${y}px,0) scale(${scale})`
+        },
+        60: {
+          transform: `translate3d(0,0,0) scale(1.1)`
+        },
+        100: {
+          transform: `translate3d(0,0,0) scale(1)`
+        }
+      }
+      // 注册animations
+      animations.registerAnimation({
+        name: 'move', // 动画名称
+        animation,
+        presets: {
+          duration: 3000, // 动画间隔
+          easing: 'linear' // 动画的缓冲
+        }
+      })
+      // 运行animations [要作用的dom对象，动画名称，动画执行完后会调用done函数，done执行完回跳到afterEnter]
+      animations.runAnimation(this.$refs.cdWrapper, 'move', done)
+    },
+    afterEnter () {
+      // 清除animation
+      animations.unregisterAnimation('move')
+      this.$refs.cdWrapper.style.animation = ''
+    },
+    leave (el, done) {
+      this.$refs.cdWrapper.style.transition = 'all 0.4s'
+      const { x, y, scale } = this._getPosAndScale()
+      this.$refs.cdWrapper.style[transform] = `translate3d(${x}px,${y}px,0) scale(${scale})`
+      this.$refs.cdWrapper.addEventListener('transitionend', () => {
+        done()
+      })
+    },
+    afterLeave () {
+      this.$refs.cdWrapper.style.transition = ''
+      this.$refs.cdWrapper.style[transform] = ''
+    },
+    _getPosAndScale () {
+      const targetWidth = 40 // mini-player 小icon的宽度
+      const paddingLeft = 40 // 小icon 中心点距离左侧的距离
+      const paddingBottom = 30 // 小icon 中心点距离底部的距离
+      const paddingTop = 80 // 大CD 距离顶部 80px
+      const width = window.innerWidth * 0.8 // cd-wrapper的宽度是80%，所以CD的宽度 = window.innerWidth * 0.8
+      const scale = targetWidth / width // 初始的缩放比例 小icon / 大CD
+      const x = -(window.innerWidth / 2 - paddingLeft) // 初始的x轴坐标
+      const y = window.innerHeight - paddingTop - width / 2 - paddingBottom // 初始的y轴坐标
+      console.log(x, y, scale);
+      return {
+        x,
+        y,
+        scale
+      }
     },
     ...mapMutations({
       setFullScreen: 'SET_FULL_SCREEN'
