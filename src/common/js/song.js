@@ -1,4 +1,7 @@
-import { getSongsUrl } from 'api/song'
+import { getSongsUrl, getLyric } from 'api/song'
+import { ERR_OK } from 'api/config'
+import { Base64 } from 'js-base64'
+
 /**
  * 为什么我们要把song设计成一个类而不是一个对象？
  * 第一个是因为我们把代码集中到一块，便于维护，不用写大量的重复代码
@@ -15,6 +18,38 @@ export default class Song {
     this.image = image // 歌曲图片
     // this.filename = `C400${this.mid}.m4a`
     this.url = url // 歌曲真实请求路径
+  }
+
+  // 获取歌词方法
+  getLyric () {
+    if (this.lyric) {
+      /**
+       * 为什么要promise？
+       * 因为我们的getLyric本身返回的就是一个promise，
+       * 这个getLyric指的是getLyric方法，不是下面获取歌词的这个getLyric
+       * 所以，下面的getLyric我们又用promise做了一层封装，
+       *
+       * 我们为什么不直接返回getLyric？
+       * 可能你会问，既然我们获取歌词的getLyric返回的是一个promise，
+       * 那我们为什么还要再封装一层promise呢？这是因为我们还要在获取歌词的getLyric
+       * 做一层处理，而且当我们的 res.retcode 不ok的时候，我们还要进行 reject。
+       * 这样的话我们外层的业务逻辑去获取到歌词的时候应该怎么做，没有获取到歌词的时候应该怎么做，
+       * 就是说我们这个函数不会处理获取歌词后的处理逻辑，他的任务很简单，
+       * 就是获取歌词，然后把结果返回出去。
+       */
+      return Promise.resolve(this.lyric)
+    }
+
+    return new Promise((resolve, reject) => {
+      getLyric(this.mid).then((res) => {
+        if (res.retcode === ERR_OK) {
+          this.lyric = Base64.decode(res.lyric)
+          resolve(this.lyric)
+        } else {
+          reject('no lyric')
+        }
+      })
+    })
   }
 }
 
