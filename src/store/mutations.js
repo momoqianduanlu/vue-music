@@ -18,6 +18,7 @@ const mutation = {
     state.fullScreen = flag
   },
   [types.SET_PLAYLIST] (state, list) {
+    // console.log('SET_PLAYLIST', list)
     state.playlist = list
   },
   [types.SET_SEQUENCE_LIST] (state, list) {
