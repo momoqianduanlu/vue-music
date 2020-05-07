@@ -25,6 +25,18 @@
               </div>
             </div>
           </div>
+          <scroll class="middle-r" ref="lyricList" :data="currentLyric && currentLyric.lines">
+            <div class="lyric-wrapper">
+              <div v-if="currentLyric">
+                <p ref="lyricLine"
+                   class="text"
+                   :class="{'current': currentLineNum ===index}"
+                   v-for="(line,index) in currentLyric.lines"
+                   :key="index"
+                >{{line.txt}}</p>
+              </div>
+            </div>
+          </scroll>
         </div>
         <div class="bottom">
           <div class="progress-wrapper">
@@ -96,6 +108,7 @@ import ProgressCircle from 'base/progress-circle/progress-circle'
 import { playMode } from 'common/js/config'
 import { shuffle } from 'common/js/util'
 import Lyric from 'lyric-parser'
+import Scroll from 'base/scroll/scroll'
 
 const transform = prefixStyle('transform')
 
@@ -105,7 +118,8 @@ export default {
       songReady: false,
       currentTime: 0,
       radius: 32,
-      currentLyric: null
+      currentLyric: null,
+      currentLineNum: 0
     }
   },
   computed: {
@@ -300,9 +314,24 @@ export default {
     getLyric () {
       this.currentSong.getLyric().then((lyric) => {
         // 做歌词解析
-        this.currentLyric = new Lyric(lyric)
+        this.currentLyric = new Lyric(lyric, this.handleLyric)
+        if (this.playing) {
+          this.currentLyric.play()
+        }
         console.log(this.currentLyric)
       })
+    },
+    handleLyric ({ lineNum, txt }) {
+      this.currentLineNum = lineNum
+      if (lineNum > 5) {
+        // lineEl是p标签数组，我们让scroll组件滚动到p标签数组的第5个
+        let lineEl = this.$refs.lyricLine[lineNum - 5]
+        console.log(lineNum, lineEl);
+        this.$refs.lyricList.scrollToElement(lineEl, 1000)
+      } else {
+        // 如果在五行之内，我们直接滚动到顶部，
+        this.$refs.lyricList.scrollTo(0, 0, 1000)
+      }
     },
     updateTime (e) {
       this.currentTime = e.target.currentTime
@@ -349,7 +378,8 @@ export default {
   },
   components: {
     ProgressBar,
-    ProgressCircle
+    ProgressCircle,
+    Scroll
   }
 }
 </script>
