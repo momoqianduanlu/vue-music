@@ -38,6 +38,7 @@ import SongList from 'base/song-list/song-list'
 import Loading from 'base/loading/loading'
 import { prefixStyle } from 'common/js/dom'
 import { mapActions } from 'vuex'
+import { playlistMixin } from 'common/js/mixin'
 
 const RESERVED_HEIGHT = 40
 // 我们将transform传入prefixStyle方法，我们在这个方法里面就能知道vendor供应商是谁
@@ -45,6 +46,7 @@ const transform = prefixStyle('transform')
 
 export default {
   name: 'music-list',
+  mixins: [playlistMixin],
   props: {
     bgImage: {
       type: String,
@@ -112,6 +114,11 @@ export default {
     }
   },
   methods: {
+    handlePlaylist (playlist) {
+      const bottom = playlist.length > 0 ? '60px' : ''
+      this.$refs.list.$el.style.bottom = bottom
+      this.$refs.list.refresh()
+    },
     back () {
       this.$router.back()
     },

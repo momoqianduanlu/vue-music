@@ -177,6 +177,10 @@ export default {
     scroll (pos) {
       this.scrollY = pos.y
     },
+    // 暴露refersh方法给singer组件调用
+    refresh () {
+      this.$refs.listview.refresh()
+    },
     // 计算每个group的高度(左侧每个字母区块的高度)
     _calculateHeight () {
       this.listHeight = []
