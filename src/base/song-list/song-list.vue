@@ -2,9 +2,9 @@
   <div class="song-list">
     <ul>
       <li class="item" @click="selectItem(song, index)" v-for="(song, index) in songs" :key="index">
-        <!-- <div class="rank">
+        <div class="rank" v-show="rank">
           <span :class="getRankCls(index)" v-text="getRankText(index)"></span>
-        </div> -->
+        </div>
         <div class="content">
           <h2 class="name">{{song.name}}</h2>
           <p class="desc">{{getDesc(song)}}</p>
@@ -23,6 +23,10 @@ export default {
       default () {
         return []
       }
+    },
+    rank: {
+      type: Boolean,
+      default: false
     }
   },
   data () {
@@ -37,6 +41,18 @@ export default {
     // 拼接desc数据
     getDesc (song) {
       return `${song.singer} 。${song.album}`
+    },
+    getRankCls (index) {
+      if (index <= 2) {
+        return `icon icon${index}`
+      } else {
+        return 'text'
+      }
+    },
+    getRankText (index) {
+      if (index > 2) {
+        return index + 1
+      }
     }
   }
 }
@@ -64,11 +80,11 @@ export default {
           height: 24px
           background-size: 25px 24px
           &.icon0
-            //bg-image('first')
+            bg-image('first')
           &.icon1
-            //bg-image('second')
+            bg-image('second')
           &.icon2
-            //bg-image('third')
+            bg-image('third')
         .text
           color: $color-theme
           font-size: $font-size-large
