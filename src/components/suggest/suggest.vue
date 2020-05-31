@@ -1,7 +1,15 @@
 <template>
-  <div class="suggest">
+  <scroll
+    class="suggest"
+    :data="result"
+    :pullup="pullup"
+    :beforeScroll="beforeScroll"
+    @scrollToEnd="searchMore"
+    @beforeScroll="listScroll"
+    ref="suggest"
+  >
     <ul class="suggest-list">
-      <li class="suggest-item" v-for="(item,index) in result" :key="index">
+      <li @click="selectItem(item)" class="suggest-item" v-for="(item,index) in result" :key="index">
         <div class="icon">
           <i :class="getIconCls(item)"></i>
         </div>
@@ -9,14 +17,23 @@
           <p class="text" v-html="getDisplayName(item)"></p>
         </div>
       </li>
+      <loading v-show="hasMore" title=""></loading>
     </ul>
-  </div>
+    <div v-show="!hasMore && !result.length" class="no-result-wrapper">
+      <no-result title="抱歉，暂无搜索结果"></no-result>
+    </div>
+  </scroll>
 </template>
 
 <script>
 import { search } from 'api/search'
 import { createSong, isValidMusic, processSongsUrl } from 'common/js/song'
 import { ERR_OK } from 'api/config'
+import Scroll from 'base/scroll/scroll'
+import Loading from 'base/loading/loading'
+import Singer from 'common/js/singer'
+import NoResult from 'base/no-result/no-result'
+import { mapMutations, mapActions  } from 'vuex'
 
 const TYPE_SINGER = 'singer'
 const perpage = 20 // 每页数据条数
@@ -35,10 +52,12 @@ export default {
   data () {
     return {
       page: 1,
+       pullup: true,
       // pullup: true,
-      // beforeScroll: true,
+      beforeScroll: true,
       // hasMore: false,
-      result: []
+      result: [],
+      hasMore: true
     }
   },
   watch: {
@@ -48,13 +67,50 @@ export default {
   },
   methods: {
     search () {
+      this.page = 1
+      this.hasMore = true
+      this.$refs.suggest.scrollTo(0, 0)
       search(this.query, this.page, this.showSinger, perpage).then((res) => {
         if (res.code === ERR_OK) {
           this._genResult(res.data).then((result) => {
             this.result = result
+            setTimeout(() => {
+              this._checkMore(res.data)
+            }, 20)
           })
         }
       })
+    },
+    searchMore () {
+      if (!this.hasMore) {
+        return
+      }
+      this.page++
+      search(this.query, this.page, this.showSinger, perpage).then((res) => {
+        if (res.code === ERR_OK) {
+          this._genResult(res.data).then((result) => {
+            this.result = this.result.concat(result)
+            setTimeout(() => {
+              this._checkMore(res.data)
+            }, 20)
+          })
+        }
+      })
+    },
+    selectItem (item) {
+      if (item.type === TYPE_SINGER) {
+        const singer = new Singer({
+          id: item.singermid,
+          name: item.singername
+        })
+        this.$router.push({
+          path: `/search/${singer.id}`
+        })
+        this.setSinger(singer)
+      } else {
+        this.insertSong(item)
+      }
+      this.$emit('select', item)
     },
     getDisplayName (item) {
       if (item.type === TYPE_SINGER) {
@@ -68,6 +124,15 @@ export default {
         return 'icon-mine'
       } else {
         return 'icon-music'
+      }
+    },
+    listScroll () {
+      this.$emit('listScroll')
+    },
+    _checkMore (data) {
+      const song = data.song
+      if (!song.list.length || (song.curnum + (song.curpage - 1) * perpage) >= song.totalnum) {
+        this.hasMore = false
       }
     },
     _genResult (data) {
@@ -90,7 +155,18 @@ export default {
         }
       })
       return ret
-    }
+    },
+    ...mapMutations({
+      setSinger: 'SET_SINGER'
+    }),
+    ...mapActions([
+      'insertSong'
+    ])
+  },
+  components: {
+    Scroll,
+    Loading,
+    NoResult
   }
 }
 </script>

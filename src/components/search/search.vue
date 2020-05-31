@@ -13,19 +13,31 @@
             </li>
           </ul>
         </div>
+        <div class="search-history" v-show="searchHistory.length">
+          <h1 class="title">
+            <span class="text">搜索历史</span>
+            <span class="clear" @click="deleteAll">
+              <i class="icon-clear"></i>
+            </span>
+          </h1>
+          <search-list @select="addQuery" @delete="deleteOne" :searches="searchHistory"></search-list>
+        </div>
       </div>
     </div>
     <div class="search-result" v-show="query">
-      <suggest :query="query"></suggest>
+      <suggest @select="saveSearch" @listScroll="blurInput" :query="query"></suggest>
     </div>
+    <router-view></router-view>
   </div>
 </template>
 
 <script type="text/ecmascript-6">
 import SearchBox from 'base/search-box/search-box'
+import SearchList from 'base/search-list/search-list'
 import Suggest from 'components/suggest/suggest'
 import { getHotKey } from 'api/search'
 import { ERR_OK } from 'api/config'
+import { mapGetters, mapActions } from 'vuex'
 
 export default {
   data () {
@@ -33,6 +45,11 @@ export default {
       hotKey: [],
       query: ''
     }
+  },
+  computed: {
+    ...mapGetters([
+      'searchHistory'
+    ])
   },
   created () {
     this._getHotKey()
@@ -44,6 +61,18 @@ export default {
     onQueryChange (query) {
       this.query = query
     },
+    blurInput () {
+      this.$refs.searchBox.blur()
+    },
+    saveSearch () {
+      this.saveSearchHistory(this.query)
+    },
+    deleteOne (item) {
+      this.deleteSearchHistory(item)
+    },
+    deleteAll () {
+      this.clearSearchHistory()
+    },
     _getHotKey () {
       getHotKey().then((res) => {
         if (res.code === ERR_OK) {
@@ -51,10 +80,16 @@ export default {
           this.hotKey = res.data.hotkey.slice(0, 10)
         }
       })
-    }
+    },
+    ...mapActions([
+      'saveSearchHistory',
+      'deleteSearchHistory',
+      'clearSearchHistory'
+    ])
   },
   components: {
     SearchBox,
+    SearchList,
     Suggest
   }
 }

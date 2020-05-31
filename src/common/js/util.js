@@ -31,3 +31,17 @@ export function shuffle (arr) {
   }
   return _arr
 }
+
+// 我们对某一个函数做节流，他就会返回一个新的函数，这个新的函数他就会去延迟执行我们要节流的函数
+export function debounce (func, delay) {
+  let timer
+  // 函数柯里化
+  return function (...arg) {
+    if (timer) {
+      clearTimeout(timer)
+    }
+    setTimeout(() => {
+      func.apply(this, arg)
+    }, delay)
+  }
+}

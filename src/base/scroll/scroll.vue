@@ -43,6 +43,10 @@ export default {
       type: String,
       default: DIRECTION_V
     },
+    beforeScroll: {
+      type: Boolean,
+      default: false
+    },
     /**
      * 当我们需要锁定只滚动一个方向的时候，我们在初始滚动的时候根据横轴和纵轴滚动的绝对值做差，
      * 当差值大于 directionLockThreshold 的时候来决定滚动锁定的方向
@@ -71,6 +75,23 @@ export default {
         let me = this
         this.scroll.on('scroll', (pos) => {
           me.$emit('scroll', pos)
+        })
+      }
+      if (this.pullup) {
+        // scrollEnd 当滚动结束的时候，
+        this.scroll.on('scrollEnd', () => {
+          // 当滚动快要结束的时候我们去判断scroll.y是不是大于最大纵向滚动位置maxScrollY
+          // 50是指scroll距离底部有50的高度
+          // 如果滚动到了底部，我们就派发scrollToEnd(滚动到底部了)事件，
+          if (this.scroll.y <= (this.scroll.maxScrollY + 50)) {
+            this.$emit('scrollToEnd')
+          }
+        })
+      }
+
+      if (this.beforeScroll) {
+        this.scroll.on('beforeScrollStart', () => {
+          this.$emit('beforeScroll')
         })
       }
     },
