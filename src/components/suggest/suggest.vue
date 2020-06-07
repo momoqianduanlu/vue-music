@@ -53,9 +53,7 @@ export default {
     return {
       page: 1,
        pullup: true,
-      // pullup: true,
       beforeScroll: true,
-      // hasMore: false,
       result: [],
       hasMore: true
     }
@@ -128,6 +126,9 @@ export default {
     },
     listScroll () {
       this.$emit('listScroll')
+    },
+    refresh () {
+      this.$refs.suggest.refresh()
     },
     _checkMore (data) {
       const song = data.song

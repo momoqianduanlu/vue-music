@@ -93,11 +93,12 @@
             <i @click.stop="togglePlaying" class="icon-mini" :class="miniIcon"></i>
           </progress-circle>
         </div>
-        <div class="control">
+        <div class="control" @click.stop="showPlayList">
           <i class="icon-playlist"></i>
         </div>
       </div>
     </transition>
+    <playlist ref="playlist"></playlist>
     <audio
       ref="audio"
       :src="currentSong.url"
@@ -120,6 +121,7 @@ import { playMode } from 'common/js/config'
 import { shuffle } from 'common/js/util'
 import Lyric from 'lyric-parser'
 import Scroll from 'base/scroll/scroll'
+import Playlist from 'components/playlist/playlist'
 
 const transform = prefixStyle('transform')
 // transition-duration: 5s 让过渡效果持续5秒
@@ -170,6 +172,9 @@ export default {
   },
   watch: {
     currentSong (newSong, oldSong) {
+      if (!newSong.id) {
+        return
+      }
       if (newSong.id === oldSong.id) {
         return
       }
@@ -390,6 +395,9 @@ export default {
       const second = this._pad(interval % 60) // 取得秒%60的余数，既得到秒数
       return `${minute}:${second}`
     },
+    showPlayList () {
+      this.$refs.playlist.show()
+    },
     middleTouchStart (e) {
       this.touch.initiated = true
       const touch = e.touches[0]
@@ -487,7 +495,8 @@ export default {
   components: {
     ProgressBar,
     ProgressCircle,
-    Scroll
+    Scroll,
+    Playlist
   }
 }
 </script>

@@ -36,7 +36,7 @@ export const randomPlay = ({ commit, state }, { list }) => {
 export const insertSong = function ({ commit, state }, song) {
   // 获取state.playlist的副本，避免直接在action里面修改state里面的数据
   let playlist = state.playlist.slice()
-  let sequenceList = state.seqenceList.slice()
+  let sequenceList = state.sequenceList.slice()
   let currentIndex = state.currentIndex
 
   // 记录当前歌曲
@@ -94,4 +94,49 @@ export const deleteSearchHistory = function ({ commit }, query) {
 
 export const clearSearchHistory = function ({ commit }) {
   commit(types.SET_SEARCH_HISTORY, clearSearch())
+}
+
+export const deleteSong = function ({ state, commit }, song) {
+  let playlist = state.playlist.slice()
+  let sequenceList = state.sequenceList.slice()
+  let currentIndex = state.currentIndex
+
+  let pIndex = findIndex(playlist, song)
+  playlist.splice(pIndex, 1)
+  let sIndex = findIndex(sequenceList, song)
+  sequenceList.splice(sIndex, 1)
+
+  /**
+   * 删除以后我们要做一些判断
+   * 如果我们要删除的歌曲在playlist列表中当前播放的歌曲的后面，我们的currentIndex要减1
+   * 如果我们要删除的这首歌是playlist列表中的最后一个了，那我们的currentIndex也要减1
+   * 不对sIndex进行处理是因为我们的currentSong的计算没有用到sequenceList，
+   */
+  if (currentIndex > pIndex || currentIndex === playlist.length) {
+    currentIndex--
+  }
+
+  commit(types.SET_PLAYLIST, playlist)
+  commit(types.SET_SEQUENCE_LIST, sequenceList)
+  commit(types.SET_CURRENT_INDEX, currentIndex)
+
+  // 列表删除完以后，我们将播放状态置为false
+  if (!playlist.length) {
+    commit(types.SET_PLAYING_STATE, false)
+  } else {
+    commit(types.SET_PLAYING_STATE, true)
+  }
+
+  /**
+   * 对上面代码的优化
+   * const playingState = playlist.length > 0
+   * commit(types.SET_PLAYING_STATE, playingState)
+   */
+}
+
+export const deleteSongList = function ({ state, commit }) {
+  commit(types.SET_PLAYLIST, [])
+  commit(types.SET_SEQUENCE_LIST, [])
+  commit(types.SET_CURRENT_INDEX, -1)
+  commit(types.SET_PLAYING_STATE, false)
 }
