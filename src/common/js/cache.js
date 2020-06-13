@@ -3,6 +3,12 @@ import storage from 'good-storage'
 const SEARCH_KEY = '__search__'
 const SEARCH_MAX_LEN = 15
 
+const PLAY_KEY = '__play__'
+const PLAY_MAX_LEN = 200
+
+const FAVORITE_KEY = '__favorite__'
+const FAVORITE_MAX_LEN = 200
+
 /**
  * arr要保存到的数组, val要保存的值，compare是一个比较函数，maxLen最大保存个数。
  * index === 0 数组中的第一条数据，我们就什么都不做，因为数组中只有一条数据，我们就直接原样返回这条数据
@@ -69,3 +75,39 @@ export function clearSearch () {
   storage.remove(SEARCH_KEY)
   return []
 }
+
+export function savePlay (song) {
+  let songs = storage.get(PLAY_KEY, [])
+  insertArray(songs, song, (item) => {
+    return song.id === item.id
+  }, PLAY_MAX_LEN)
+  storage.set(PLAY_KEY, songs)
+  return songs
+}
+
+export function loadPlay () {
+  return storage.get(PLAY_KEY, [])
+}
+
+export function saveFavorite (song) {
+  let songs = storage.get(FAVORITE_KEY, [])
+  insertArray(songs, song, (item) => {
+    return song.id === item.id
+  }, FAVORITE_MAX_LEN)
+  storage.set(FAVORITE_KEY, songs)
+  return songs
+}
+
+export function deleteFavorite (song) {
+  let songs = storage.get(FAVORITE_KEY, [])
+  deleteFromArray(songs, (item) => {
+    return item.id === song.id
+  })
+  storage.set(FAVORITE_KEY, songs)
+  return songs
+}
+
+export function loadFavorite () {
+  return storage.get(FAVORITE_KEY, [])
+}
+

@@ -71,7 +71,7 @@
               <i @click="next" class="icon-next"></i>
             </div>
             <div class="icon i-right">
-              <i class="icon icon-not-favorite"></i>
+              <i class="icon" :class="getFavoriteIcon(currentSong)" @click="toggleFavorite(currentSong)"></i>
             </div>
           </div>
         </div>
@@ -112,7 +112,7 @@
 </template>
 
 <script>
-import { mapGetters, mapMutations } from 'vuex'
+import { mapGetters, mapMutations, mapActions } from 'vuex'
 import animations from 'create-keyframe-animation'
 import { prefixStyle } from 'common/js/dom'
 import ProgressBar from 'base/progress-bar/progress-bar'
@@ -122,12 +122,15 @@ import { shuffle } from 'common/js/util'
 import Lyric from 'lyric-parser'
 import Scroll from 'base/scroll/scroll'
 import Playlist from 'components/playlist/playlist'
+import { playerMixin } from 'common/js/mixin'
+
 
 const transform = prefixStyle('transform')
 // transition-duration: 5s 让过渡效果持续5秒
 const transitionDuration = prefixStyle('transitionDuration')
 
 export default {
+  mixins: [playerMixin],
   data () {
     return {
       songReady: false,
@@ -142,10 +145,6 @@ export default {
   computed: {
     cdCls () {
       return this.playing ? 'play' : ''
-    },
-    iconMode () {
-      return this.mode === playMode.sequence ? 'icon-sequence' :
-        this.mode === playMode.loop ? 'icon-loop' : 'icon-random'
     },
     playIcon () {
       return this.playing ? 'icon-pause' : 'icon-play'
@@ -162,22 +161,25 @@ export default {
     },
     ...mapGetters([
       'fullScreen',
-      'playlist',
-      'currentSong',
+      //'playlist',
+      //'currentSong',
       'playing',
       'currentIndex',
-      'mode',
-      'sequenceList'
+      //'mode',
+      //'sequenceList'
     ])
   },
   watch: {
     currentSong (newSong, oldSong) {
-      if (!newSong.id) {
+      if (!newSong.id || !newSong.url || newSong.id === oldSong.id) {
         return
       }
-      if (newSong.id === oldSong.id) {
-        return
-      }
+      // if (!newSong.id) {
+      //   return
+      // }
+      // if (newSong.id === oldSong.id) {
+      //   return
+      // }
       // 停掉currentLyric之前的计时器
       if (this.currentLyric) {
         this.currentLyric.stop()
@@ -299,6 +301,7 @@ export default {
     // audio src 加载完成
     ready () {
       this.songReady = true
+      this.savePlayHistory(this.currentSong)
     },
     // audio src 加载失败
     error () {
@@ -332,30 +335,6 @@ export default {
       if (this.currentLyric) {
         this.currentLyric.seek(currentTime * 1000)
       }
-    },
-    // 播放模式切换
-    changeMode () {
-      const mode = (this.mode + 1) % 3
-      this.setPlayMode(mode)
-
-      let list = null
-      // 如果是随机播放
-      if (mode === playMode.random) {
-        // 洗牌
-        list = shuffle(this.sequenceList)
-      } else {
-        // 如果是顺序播放或是循环播放
-        list = this.sequenceList
-      }
-      this.resetCurrentIndex(list)
-      this.setPlayList(list)
-    },
-    // 设置currentIndex
-    resetCurrentIndex (list) {
-      let index = list.findIndex((item) => {
-        return item.id === this.currentSong.id
-      })
-      this.setCurrentIndex(index)
     },
     // 获取歌词
     getLyric () {
@@ -486,11 +465,15 @@ export default {
     },
     ...mapMutations({
       setFullScreen: 'SET_FULL_SCREEN',
-      setPlayingState: 'SET_PLAYING_STATE',
-      setCurrentIndex: 'SET_CURRENT_INDEX',
-      setPlayMode: 'SET_PLAY_MODE',
-      setPlayList: 'SET_PLAYLIST'
-    })
+      setPlayHistory: 'SET_PLAY_HISTORY'
+      // setPlayingState: 'SET_PLAYING_STATE',
+      // setCurrentIndex: 'SET_CURRENT_INDEX',
+      // setPlayMode: 'SET_PLAY_MODE',
+      // setPlayList: 'SET_PLAYLIST'
+    }),
+    ...mapActions([
+      'savePlayHistory'
+    ])
   },
   components: {
     ProgressBar,
